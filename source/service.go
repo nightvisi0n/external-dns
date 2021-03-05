@@ -678,19 +678,39 @@ func (sc *serviceSource) extractNodePortEndpoints(svc *v1.Service, nodeTargets e
 }
 
 func (sc *serviceSource) AddEventHandler(ctx context.Context, handler func()) {
-	log.Debug("Adding event handler for service")
+	log.Debugf("Adding event handlers for service in namespace '%s'", sc.namespace)
 
 	// Right now there is no way to remove event handler from informer, see:
 	// https://github.com/kubernetes/kubernetes/issues/79610
 	sc.serviceInformer.Informer().AddEventHandler(
 		cache.ResourceEventHandlerFuncs{
 			AddFunc: func(obj interface{}) {
+				log.Debugf("svc added")
 				handler()
 			},
 			UpdateFunc: func(old interface{}, new interface{}) {
+				log.Debugf("svc updated")
 				handler()
 			},
 			DeleteFunc: func(obj interface{}) {
+				log.Debugf("svc deleted")
+				handler()
+			},
+		},
+	)
+
+	sc.endpointsInformer.Informer().AddEventHandler(
+		cache.ResourceEventHandlerFuncs{
+			AddFunc: func(obj interface{}) {
+				log.Debugf("endpoints added")
+				handler()
+			},
+			UpdateFunc: func(old interface{}, new interface{}) {
+				log.Debugf("endpoints updated")
+				handler()
+			},
+			DeleteFunc: func(obj interface{}) {
+				log.Debugf("endpoints deleted")
 				handler()
 			},
 		},
